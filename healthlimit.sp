@@ -22,7 +22,6 @@ public OnPluginStart()
 	RegAdminCmd("sm_limithealth", Command_LimitHealth, ADMFLAG_SLAY, "sm_limithealth <userid> <amount>");
     
     HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Post)
-    HookEvent("player_healed", Event_PlayerHealed, EventHookMode_Post)
     HookEvent("player_death", Event_PlayerDied, EventHookMode_Post)
     
     InitHealthLimit();
@@ -34,6 +33,16 @@ public OnGameFrame()
     {
         if(healthLimit[i] > -1)
         {
+            new health = GetEntProp(i, Prop_Send, "m_iHealth") // get current health
+            if(health > actualHealth[i]) // compare to inner value
+            {
+                actualHealth[i] = health; // correct inner value upwards
+            }
+            if(health > healthLimit[i]) // limit
+            {
+                actualHealth[i] = healthLimit[i];
+            }
+            
             if (healthLimit[i] == 0)
                 SetEntityHealth(i, 1);
             else
@@ -101,21 +110,6 @@ public Action:Event_PlayerHurt(Handle:event, const String:Name[], bool:dontBroad
     new health = GetEventInt(event, "health")
     
     actualHealth[client] = health;
-    
-    return Plugin_Handled;
-}
-
-public Action:Event_PlayerHealed(Handle:event, const String:Name[], bool:dontBroadcast )
-{
-    new client = GetClientOfUserId(GetEventInt(event, "patient"));
-    new health = GetEventInt(event, "amount") + actualHealth[client];
-    
-    actualHealth[client] = health;
-    
-    if(health > healthLimit[client])
-    {
-        actualHealth[client] = healthLimit[client];
-    }
     
     return Plugin_Handled;
 }
